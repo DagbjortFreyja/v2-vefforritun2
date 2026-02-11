@@ -1,5 +1,6 @@
 import pg from 'pg';
 import type { Todo } from '../types.js';
+import type { TodoItem } from './validation.js';
 
 /**
  * Gets a PostgreSQL connection pool.
@@ -63,6 +64,7 @@ export async function init(): Promise<boolean> {
       created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
   */
+ return false
 }
 
 /**
@@ -71,6 +73,29 @@ export async function init(): Promise<boolean> {
  */
 export async function listTodos(): Promise<Todo[] | null> {
   // SELECT id, title, finished FROM todos ORDER BY finished ASC, created DESC
+
+ // const todos: Todo[] = [
+   // {
+     // title: 'verkefni1',
+      //finished: true
+   // },
+   // {
+    //  title: 'verkefni2',
+     // finished: false
+    //},
+   // {
+     // title: 'verkefni3',
+      //finished: false
+   // }
+  //]
+
+ // return todos;
+
+  const results = await query('SELECT id, title, finished FROM todos ORDER BY finished ASC, created DESC');
+  if(results){
+    return results.rows as Todo[];
+  }
+  return null
 }
 
 /**
@@ -78,8 +103,20 @@ export async function listTodos(): Promise<Todo[] | null> {
  * @param title Title of the todo item to create.
  * @returns Created todo item or null on error.
  */
-export async function createTodo(title: string): Promise<Todo | null> {
+export async function createTodo(todoItem: TodoItem): Promise<Todo | null> {
   // INSERT INTO todos (title) VALUES ($1) RETURNING id, title, finished
+  const q  = 'INSERT INTO todos (title) VALUES ($1) RETURNING id, title, finished'
+
+  const result = await query<Todo>(q, [todoItem.title])
+
+  const row= result?.rows[0];
+
+  if(!row) {
+    console.error('query success but no returned rows');
+    return null;
+  }
+  return row;
+
 }
 
 /**
@@ -95,6 +132,23 @@ export async function updateTodo(
   finished: boolean,
 ): Promise<Todo | null> {
   // UPDATE todos SET title = $1, finished = $2 WHERE id = $3 RETURNING id, title, finished
+  const q = `
+  UPDATE todos
+  SET title = $1, finished = $2
+  WHERE id = $3
+  RETURNING id, title, finished
+`;
+
+const result = await query<Todo>(q, [title, finished, id]);
+
+const row = result?.rows[0];
+
+if (!row) {
+  console.error('update failed or no row returned');
+  return null;
+}
+
+return row;
 }
 
 /**
@@ -104,6 +158,14 @@ export async function updateTodo(
  */
 export async function deleteTodo(id: number): Promise<boolean | null> {
   // DELETE FROM todos WHERE id = $1
+  const q = 'DELETE FROM todos WHERE id = $1';
+
+const result = await query(q, [id]);
+
+if (!result) return null;
+
+return result.rowCount === 1;
+
 }
 
 /**
@@ -112,4 +174,12 @@ export async function deleteTodo(id: number): Promise<boolean | null> {
  */
 export async function deleteFinishedTodos(): Promise<number | null> {
   // DELETE FROM todos WHERE finished = true
+  const q = 'DELETE FROM todos WHERE finished = true';
+
+const result = await query(q);
+
+if (!result) return null;
+
+return result.rowCount ?? 0;
+
 }

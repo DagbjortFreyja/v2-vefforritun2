@@ -8,6 +8,7 @@ import { ErrorPage } from './components/ErrorPage.js';
 import { AboutPage } from './components/About.js';
 import { updateTodo } from './lib/db.js';
 
+
 // búum til og exportum Hono app
 export const app = new Hono();
 

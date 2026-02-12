@@ -4,8 +4,8 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/index.ts",
     "build": "tsc",
-    "start": "node --env-file=.env dist/index.js",
     "lint": "eslint",
+    "start": "node dist/index.js",
     "test": "cross-env NODE_ENV=test node --import tsx --test --experimental-test-module-mocks \"src/**/*.test.ts\"",
     "test:watch": "node --import tsx --test --watch --experimental-test-module-mocks 'src/**/*.test.ts'",
     "test:coverage": "node --import tsx --test --experimental-test-coverage --experimental-test-module-mocks 'src/**/*.test.ts'"
